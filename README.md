@@ -85,3 +85,57 @@ Follow these steps to set up a Spring Boot application with CRUD features integr
     Use the MySQL commands to interact with your database as needed.
 
     ![Screenshot 2024-03-30 at 10 15 35 AM](https://github.com/Application4/dc-comp/assets/25712816/a1af1042-1895-4426-9cdb-a8a68399d056)
+
+
+    **Docker Compose with Kafka**
+
+
+```yaml
+version: '3.8'
+
+services:
+  mysql-db:
+    image: 'mysql:latest'
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: persondb
+    ports:
+      - '3307:3306'
+
+  zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: wurstmeister/kafka
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_HOST_NAME: localhost
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  application:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: person-service:1.0
+    depends_on:
+      - mysql-db
+      - kafka
+    ports:
+      - '7070:7070'
+    environment:
+      SPRING_DATASOURCE_URL: 'jdbc:mysql://mysql-db:3306/persondb'
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: password
+```
+
+
+
